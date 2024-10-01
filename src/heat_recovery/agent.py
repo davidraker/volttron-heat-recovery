@@ -1,34 +1,53 @@
+# -*- coding: utf-8 -*- {{{
+# ===----------------------------------------------------------------------===
+#
+#                 Installable Component of Eclipse VOLTTRON
+#
+# ===----------------------------------------------------------------------===
+#
+# Copyright 2022 Battelle Memorial Institute
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy
+# of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# ===----------------------------------------------------------------------===
+# }}}
+
 import dataclasses
+import dateutil.tz
+import importlib.metadata
 import logging
 import os
 import sys
-from copy import deepcopy
+
 from collections import defaultdict
+from copy import deepcopy
 from dataclasses import dataclass
-from datetime import timedelta as td, datetime
+from datetime import datetime, timedelta as td
+from dateutil import parser
+
+from numpy import mean
 from pathlib import Path
 from typing import List, Union, Optional, Tuple, Dict
 
-import dateutil.tz
-from dateutil import parser
-from numpy import mean
+from volttron.client.messaging import topics, headers as headers_mod
+from volttron.client.vip.agent import Agent
+from volttron.utils import load_config, vip_main
 
-from volttron.platform.agent.utils import (
-    vip_main, load_config
-)
-from volttron.platform.messaging import topics, headers as headers_mod
-from volttron.platform.vip.agent import (
-    Agent,
-)
-from .analysis_config import AnalysisConfig, UnitProperty
-from .diagnostics import (
-    table_log_format,
-    table_publish_format,
-    HRT_LIMIT,
-    TemperatureSensor,
-    HeatRecoveryCorrectlyOn,
-    HeatRecoveryCorrectlyOff, DX_LIST, DX, OAT_LIMIT, EAT_LIMIT, FAN_OFF, OAT_EAT_CLOSE, OAT_SAT_SP_CLOSE, TEMP_SENSOR,
-    ResultPublisher
+from heat_recovery.analysis_config import AnalysisConfig, UnitProperty
+from heat_recovery.diagnostics import (
+    DX, DX_LIST, EAT_LIMIT, FAN_OFF, HRT_LIMIT, OAT_EAT_CLOSE, OAT_LIMIT, OAT_SAT_SP_CLOSE, TEMP_SENSOR,
+    HeatRecoveryCorrectlyOff, HeatRecoveryCorrectlyOn, ResultPublisher, TemperatureSensor,
+    table_log_format, table_publish_format
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -37,7 +56,8 @@ _log = logging.getLogger(__name__)
 
 ANALYSIS_NAME = "Heat_Recovery_AIRCx"
 
-__version__ = "0.1.0"
+__version__ = importlib.metadata.version("mypackage")
+
 ##########################################################################
 # FIELD MAPPINGS
 #
@@ -365,7 +385,7 @@ class HeatRecoveryAgent(Agent):
         data_message = message[0]
 
         # Re-initialize the value mappings
-        self.value_map = defaultdict(list, keys=self.cfg.arguments.point_mapping.get_keys())
+        self.value_map = defaultdict(list, keys=list(self.cfg.arguments.point_mapping.get_keys()))
 
         # k in this case is both the key of the message and
         # the value of the arguments.point_mapping.key
@@ -558,7 +578,7 @@ class HeatRecoveryAgent(Agent):
             ResultPublisher.push_result(obj=self, table=(diagnostic + DX), data=dx_msg, timestamp=cur_time)
             # self.results_publish.append(txt)
 
-    def determine_hr_condition(self) -> bool:
+    def determine_hr_condition(self):
         if self.mean_sat_sp + self.cfg.oa_sat_high_deadband < self.mean_oatemp < self.mean_eatemp - self.cfg.oa_ea_low_deadband:
             self.hr_cond = False
         else:

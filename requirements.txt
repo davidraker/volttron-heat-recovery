@@ -1,6 +1,0 @@
-pandas
-numpy
-dateutils
-
-# testing requirements
-# pytest
