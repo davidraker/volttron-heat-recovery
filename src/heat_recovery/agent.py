@@ -38,10 +38,16 @@ from dateutil import parser
 from numpy import mean
 from pathlib import Path
 from typing import List, Union, Optional, Tuple, Dict
+from importlib.metadata import version
 
-from volttron.client.messaging import topics, headers as headers_mod
-from volttron.client.vip.agent import Agent
-from volttron.utils import load_config, vip_main
+if int(version('volttron').split('.')[0]) >= 10:
+    from volttron.client.messaging import topics, headers as headers_mod
+    from volttron.client.vip.agent import Agent
+    from volttron.utils import load_config, vip_main
+else:
+    from volttron.platform.agent.utils import load_config, vip_main
+    from volttron.platform.messaging import topics, headers as headers_mod
+    from volttron.platform.vip.agent import Agent
 
 from heat_recovery.analysis_config import AnalysisConfig, UnitProperty
 from heat_recovery.diagnostics import (
