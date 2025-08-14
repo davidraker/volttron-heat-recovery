@@ -17,7 +17,7 @@ show_error_codes = true
 exclude = ['docs/']
 
 [tool.poetry]
-name = "volttron-applications-heat-recovery-rcx"
+name = "volttron-heat-recovery"
 version = "0.2.0"
 description = ""
 authors = ["VOLTTRON Team <volttron@pnnl.gov>"]
@@ -39,7 +39,7 @@ classifiers = [
 [tool.poetry.dependencies]
 pandas = "^2.0.0"
 python = ">=3.10,<4.0"
-volttron = ">=10.0.2rc0,<11.0"
+volttron-core = ">=2.0.0rc0"
 
 [tool.poetry.group.dev.dependencies]
 volttron-testing = "^0.4.0rc0"
@@ -58,7 +58,7 @@ Sphinx = "^4.5.0"
 sphinx-rtd-theme = "^1.0.0"
 
 [tool.poetry.scripts]
-volttron-actuator = "actuator.agent:main"
+volttron-heat-recovery = "heat_recovery.agent:main"
 
 [tool.yapf]
 based_on_style = "pep8"

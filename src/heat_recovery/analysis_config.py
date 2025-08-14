@@ -28,18 +28,17 @@ from __future__ import annotations
 
 import dataclasses
 
-from dataclasses import dataclass
 from functools import lru_cache
 from typing import List, Dict, Optional, Tuple
 
 
-@dataclass
+@dataclasses.dataclass
 class MatchProperty:
     match: str
     datatype: str
 
 
-@dataclass
+@dataclasses.dataclass
 class SubDeviceProperty:
     """
     A SubDeviceProperty is used to contain sub devices from a
@@ -67,7 +66,7 @@ class SubDeviceProperty:
         return self.subdevices.__iter__()
 
 
-@dataclass
+@dataclasses.dataclass
 class UnitProperty:
     """
     A UnitProperty has either a string reference or a List of
@@ -104,7 +103,7 @@ class UnitProperty:
         return self.units.__iter__()
 
 
-@dataclass
+@dataclasses.dataclass
 class DeviceProperty:
     """
     A DeviceProperty contains the campus and building properties and
@@ -115,7 +114,7 @@ class DeviceProperty:
     unit: str
 
 
-@dataclass
+@dataclasses.dataclass
 class PointMapping:
     outdoor_air_temperature: str = "OutdoorAirTemperature"
     supply_fan_status: str = "SupplyFanStatus"
@@ -159,7 +158,7 @@ class PointMapping:
         raise ValueError(f"value: {value} not found on instance.")
 
 
-@dataclass
+@dataclasses.dataclass
 class ArgumentsProperty:
     point_mapping: PointMapping
 
@@ -174,7 +173,7 @@ class ArgumentsProperty:
                 setattr(self, k, v)
 
 
-@dataclass
+@dataclasses.dataclass
 class ConversionMapProperty:
     conversion_map: Optional[List[MatchProperty]]
 
@@ -194,7 +193,7 @@ class ConversionMapProperty:
             self.conversion_map.append(MatchProperty(**k))
 
 
-@dataclass
+@dataclasses.dataclass
 class AnalysisConfig:
     """
     AnalsyisConfig is a validator and documentation tool for the different

@@ -26,26 +26,25 @@ import dataclasses
 import dateutil.tz
 import importlib.metadata
 import logging
-import os
 import sys
 
 from collections import defaultdict
 from copy import deepcopy
-from dataclasses import dataclass
 from datetime import datetime, timedelta as td
 from dateutil import parser
-
 from numpy import mean
 from pathlib import Path
 from typing import List, Union, Optional, Tuple, Dict
-from importlib.metadata import version
+from importlib.metadata import distribution, PackageNotFoundError
 
-if int(version('volttron').split('.')[0]) >= 10:
+try:
+    distribution('volttron-core')
+    from volttron.client.logs import setup_logging
     from volttron.client.messaging import topics, headers as headers_mod
     from volttron.client.vip.agent import Agent
     from volttron.utils import load_config, vip_main
-else:
-    from volttron.platform.agent.utils import load_config, vip_main
+except PackageNotFoundError:
+    from volttron.platform.agent.utils import load_config, setup_logging, vip_main
     from volttron.platform.messaging import topics, headers as headers_mod
     from volttron.platform.vip.agent import Agent
 
@@ -56,13 +55,12 @@ from heat_recovery.diagnostics import (
     table_log_format, table_publish_format
 )
 
-logging.basicConfig(level=logging.DEBUG)
-# setup_logging(logging.DEBUG, True)
+setup_logging()
 _log = logging.getLogger(__name__)
 
 ANALYSIS_NAME = "Heat_Recovery_AIRCx"
 
-__version__ = importlib.metadata.version("mypackage")
+__version__ = importlib.metadata.version("volttron-heat-recovery")
 
 ##########################################################################
 # FIELD MAPPINGS
@@ -86,7 +84,7 @@ F_HR_STATUS = "heat_return_status"
 F_DT_SET_POINT = "discharge_temperature_set_point"
 
 
-@dataclass
+@dataclasses.dataclass
 class HeatRecoveryConfig(AnalysisConfig):
     analysis_name: str
     actuation_mode: str
@@ -129,7 +127,7 @@ class HeatRecoveryConfig(AnalysisConfig):
         self.actuation_mode = "PASSIVE"
 
         # we need to deal with the arguments here that are
-        for k, v in self.arguments.items():
+        for k, v in dataclasses.asdict(self.arguments).items():
             if k == 'point_mapping':
                 continue
 
@@ -153,19 +151,15 @@ class HeatRecoveryAgent(Agent):
         if not pth.is_file():
             raise ValueError(f"Invalid config_path specified {config_path}")
 
-        # our configuration is setup to be a dictionary and is available
-        # from the config store or the file passed to the agent itself.
-        self.cfg: Union[dict, HeatRecoveryConfig] = {}
-
-        # Get the data from the passed file.
-        config = load_config(config_path)
-
-        # If there is configuration then we need to set it for the default use
-        # case, otherwise the agent will use what is currently in the config
-        # store.
-        if config:
-            self.vip.config.set_default("config", config)
-            self.cfg = HeatRecoveryConfig(**config)
+        # If there is configuration then we need to set it for the default use case,
+        #  otherwise the agent will use what is currently in the config store.
+        try:
+            config = load_config(config_path)
+        except (ValueError, Exception) as e:
+            _log.warning(f'Error loading default configuration from file: {e}')
+            config = {}
+        self.cfg: HeatRecoveryConfig = HeatRecoveryConfig(**config)
+        self.vip.config.set_default("config", dataclasses.asdict(self.cfg))
 
         # Subscription allows any changes to the config store to propagate
         # to the agent.
@@ -770,12 +764,12 @@ class HeatRecoveryAgent(Agent):
             to_publish.clear()
         self.results_publish.clear()
 
-
-if __name__ == '__main__':
+def main():
     try:
-        publickey = os.environ.get("AGENT_PUBLICKEY")
-        secretkey = os.environ.get("AGENT_SECRETKEY")
-        serverkey = os.environ.get("AGENT_SERVERKEY")
-        vip_main(HeatRecoveryAgent, version=__version__, publickey=publickey, secretkey=secretkey, serverkey=serverkey)
+        vip_main(HeatRecoveryAgent, version=__version__)
     except KeyboardInterrupt:
         pass
+
+
+if __name__ == '__main__':
+    main()

@@ -4,7 +4,7 @@ actuation_mode: PASSIVE
 
 
 device:
-  campus: campus
+  campus: campus  # Defaults should be blank strings.
   building: building
   unit: rtu4
 
@@ -24,7 +24,7 @@ arguments:
     heat_return_status: HrWheelEnabled
     discharge_temperature_set_point: DischargeAirTemperatureSetPoint
 
-  timezone: US/Pacific
+  timezone: US/Pacific  #UTC
   no_required_data: 4
   oat_low_threshold: 20.0
   oat_high_threshold: 120.0
