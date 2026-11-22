@@ -37,7 +37,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-pandas = "^2.0.0"
+pandas = ">=2.0.0"    # 3.x for Python 3.15; 2.x still resolves on 3.10
 python = ">=3.10,<4.0"
 volttron-core = ">=2.0.0rc0"
 
